@@ -1,0 +1,129 @@
+---
+title: "shawd_dds_hw3"
+output: html_document
+---
+
+### Question 2
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+We want to: 
+
+a) read in titanic.csv
+
+b) Count males and females, and plot the counts
+
+c) Use lapply to output means of age, fare, and survival
+
+```{r read, echo=TRUE}
+library(data.table)
+library(ggplot2)
+
+# a)
+df <- fread('~/awesome-public-datasets/Datasets/titanic.csv')
+
+# b)
+print(paste0("Men: ", nrow(df[Sex=="male"])))
+print(paste0("Women: ", nrow(df[Sex=='female'])))
+
+plot(
+  ggplot(data=df, aes(x=Sex)) + 
+    geom_bar() +
+    ggtitle("Counts of Men and Women on Titanic") +
+    xlab("Gender") +
+    ylab("Counts")
+)
+
+# c)
+
+invisible(lapply(c("Age", "Fare", "Survived"), function(x, dt) {
+  out <- mean(dt[, get(x)], na.rm=T)
+  print(paste0("Mean of ", x, " = ", out))
+  return(NULL)
+}, dt=df))
+
+
+
+
+```
+
+### Question 3
+
+
+```{r sleep, echo=T}
+
+# a) Read in data
+
+sleep <- setDT(read.table('http://talklab.psy.gla.ac.uk/L1_labs/lab_1/homework/sleep_data_01.csv', sep=',', header=T))
+
+# Create median age, min/max sleep duration, mean/sd RSES
+parse_sleep <- function(dt) {
+  sleep_med <- median(dt$Age, na.rm=T)
+  sleep_dur <- c(min(dt$Duration, na.rm=T), max(dt$Duration, na.rm=T))
+  summary_rses <- c(mean(dt$RSES, na.rm=T), sd(dt$RSES, na.rm=T))
+  
+  # b) Create report dt
+  report <- data.table(
+    MedianAge = sleep_med, 
+    SelfEsteem = summary_rses[1]/5,
+    SE_SD = summary_rses[2]/5,
+    DurationRange= sleep_dur[2] - sleep_dur[1]
+    )
+  # d)
+  report[, (names(report)) := lapply(.SD, round, digits=2)]
+  return(report)
+}
+
+#e)
+parse_sleep(sleep)
+
+```
+
+### Question 4
+
+```{r 538}
+
+library(fivethirtyeight)
+
+data_list <- data(package='fivethirtyeight')
+
+res <- data_list$results[22,]
+
+data(college_recent_grads)
+college_recent_grads$url <- "https://github.com/rudeboybert/fivethirtyeight"
+
+dim(college_recent_grads)
+
+```
+
+### Question 5
+
+```{r}
+# a)
+names(college_recent_grads)
+length(names(college_recent_grads))
+
+# b)
+setDT(college_recent_grads)
+major_count <- college_recent_grads[, .N, by='major_category']
+
+# c)
+par(las=2)
+barplot(major_count$N, names.arg=major_count$major_category, horiz = T, xlab='Major category', ylab = 'Frequency', main = "Counts by Major Category", col='blue')
+
+# d)
+fwrite(major_count, '~/SMU-MSDS-Homework/Homework/Doing Data Science/wk3/major_count.csv')
+
+```
+
+### Question 6
+
+Please see the repository at 
+
+https://github.com/davidshaw2018/SMU-MSDS-Homework
+
+
+
+
