@@ -1,0 +1,162 @@
+---
+title: "ShawD_HW4"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Question 1
+
+Harry Potter Cast
+
+### A, B
+
+```{r, echo=T} 
+# Load libraries
+library(rvest)
+library(data.table)
+library(ggplot2)
+
+# Parse URL
+hp<-read_html("http://www.imdb.com/title/tt1201607/fullcredits?ref_=tt_ql_1")
+# We're looking only for a table, so specify table node
+hp_tables <- html_nodes(hp, "table")
+hp_tables
+
+# Cast is the 3rd element of hp_tables
+cast <- hp_tables[3]
+
+# Extract into a data.table
+cast <- html_table(cast)
+cast_list <- setDT(cast[[1]])
+
+```
+
+
+### C
+
+```{r, echo=T}
+
+# Trim empty columns
+cast_list[, c('X1', 'X3') := NULL]
+
+# Give appropriate names
+setnames(cast_list, c("X2", "X4"), c("Actor", "Character"))
+
+# Keep only rows with data
+cast_list <- cast_list[!(Actor %in% c("Rest of cast listed alphabetically:", ""))]
+```
+
+### D
+
+```{r, echo=T}
+
+# Create surname column
+get_surname <- function(x) {
+  out_set <- strsplit(x, " ")
+  result <- lapply(out_set, function(x) tail(x, n=1))
+  return(result)
+}
+cast_list[, surname := get_surname(Actor)]
+
+# Remove surname from Actor column
+cast_list[, FirstName := gsub(" [^ ]*$", "", Actor)]
+
+# Sub out spaces and new lines
+cast_list[, Character := gsub("\\n ","", Character)]
+
+# Manually sub the Griphook/ Prof Flitwick character
+cast_list[Character %like% "Griphook", Character := "Griphook / Professor Flitwick"]
+
+# Remove Actor column
+cast_list[, Actor := NULL]
+```
+
+### E
+
+```{r, echo=T}
+# Display head of cast_list
+head(cast_list, 10)
+```
+
+
+# Question 2
+
+### A, B
+
+```{r, echo=T}
+spurs_url <- read_html("http://www.espn.com/nba/team/stats/_/name/sa/san-antonio-spurs")
+
+# We're interested in the shooting stats table
+# Unfortunately, they are scraped as 2 separate tables - will have to merge
+spurs_tabs <- html_table(spurs_url, fill=T)
+
+players <- setDT(spurs_tabs[[6]])
+splits <- setDT(spurs_tabs[[7]])
+
+```
+
+### C
+
+```{r, echo=T}
+
+# We only need the first 14 columns in the shooting splits table
+splits <- splits[, 1:14]
+
+# The second row of the splits frame should be the header names
+names(splits) <- unlist(splits[2,])
+
+# We don't need the first 2 rows anymore of splits
+splits <- splits[3:.N, .SD]
+
+# cbind the player names and splits frames
+shooting_stats <- cbind(players, splits)
+
+# Drop totals column
+shooting_stats <- shooting_stats[Name != 'Total']
+
+# Create position column
+shooting_stats[, position := get_surname(Name)]
+# Remove position from player name
+shooting_stats[, Name := gsub(" .{1,2}$", "", Name)]
+
+# Convert non-name/position columns to numeric
+num_cols <- names(shooting_stats)[2:15]
+shooting_stats[, (num_cols) := lapply(.SD, as.numeric), .SDcols=num_cols]
+shooting_stats[, lapply(.SD, class)]
+
+# Remove %s from names, can cause issues later
+setnames(shooting_stats, c("FG%", "3P%", "2P%", "FT%"), c("FGperc", "3Pperc", "2Pperc", "FTperc"))
+
+```
+### D
+
+```{r}
+
+# Unlist position, for plotting purposes
+shooting_stats[, position := unlist(position)]
+
+p <- ggplot(data=shooting_stats, aes(x=Name, y=FGperc, fill=position)) +
+  geom_col()+
+  ggtitle("Field Goal Percentage by Spurs Player") +
+  xlab("Player") +
+  ylab("FG%") +
+  coord_flip()
+
+plot(p)
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
