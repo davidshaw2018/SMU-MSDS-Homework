@@ -1,0 +1,89 @@
+---
+title: "ShawD_wk5_HW"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Question 1
+
+
+```{r, echo=T}
+
+library(data.table)
+
+
+# A
+df <- read.table('~/MSDS-6306-Doing-Data-Science/Unit 5/yob2016.txt', sep=';')
+df <- setDT(df)
+names(df) <- c('name', 'gender', 'count')
+
+
+# B
+dim(df)
+head(df)
+
+
+# C
+grep("yyy$", df$name, value=T)
+
+
+# D
+y2016 <- df[name != "Fionayyy"]
+
+```
+
+
+# Question 2
+
+```{r, echo=T}
+
+# A
+y2015 <- df <- read.table('~/MSDS-6306-Doing-Data-Science/Unit 5/yob2015.txt', sep=',')
+y2015 <- setDT(y2015)
+names(y2015) <- c("name", "gender", "count")
+
+
+# B
+tail(y2015, 10)
+```
+
+A note of interest about the last 10 rows of y2015: They're all Z-names, male, and have a low count, suggesting this table is sorted. 
+
+```{r, echo=T}
+#C
+
+final <- merge(y2016, y2015, by=c("name", 'gender'), suffixes = c('_2015', "_2016"))
+
+```
+
+# Question 3
+
+```{r, echo=T}
+
+# A
+final[, total := count_2015 + count_2016]
+
+# B
+final <- final[order(-total)]
+head(final$name, 10)
+
+# C
+head(final[gender == "F", name], 10)
+
+# D
+write.csv(head(final[gender=='F', list(name, total)], 10), '~/SMU-MSDS-Homework/Homework/Doing Data Science/wk5/top_10_girl_names.csv')
+
+```
+
+# Question 4
+
+This assignment will be pushed to my [Github](https://github.com/davidshaw2018/SMU-MSDS-Homework/tree/master/Homework/Doing%20Data%20Science)
+
+
+
+
+
+
