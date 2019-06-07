@@ -1,7 +1,7 @@
 # Week 5 Homework Codebook
 
 ### Libraries used:
--data.table
+- data.table
 
 ### Objects created
 - df: data.table object
@@ -20,5 +20,5 @@
   - Columns: name(character), gender(character), count_2015(numeric), count_2016(numeric), total(numeric)
   
 ### Outputs
--top_10_girls_names.csv
+- top_10_girls_names.csv
   - Contains the 10 most popular girls names, by total names in 2015 and 2016
